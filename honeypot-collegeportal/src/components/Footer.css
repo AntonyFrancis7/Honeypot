@@ -1,8 +1,8 @@
 .footer {
   background: #1a1a1a;
   color: #fff;
-  padding: 3rem 2rem 1rem 2rem;
-  margin-top: 3rem;
+  padding: 2rem 1.5rem 1rem 1.5rem; /* Reduced padding */
+  margin-top: 2rem; /* Reduced margin-top */
 }
 
 .footer-container {
@@ -10,13 +10,13 @@
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem; /* Reduced gap */
+  margin-bottom: 1.5rem; /* Reduced margin */
 }
 
 .footer-column h3 {
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem; /* Reduced from 1rem */
   color: #ffd700;
   font-size: 1.1rem;
   font-weight: 600;

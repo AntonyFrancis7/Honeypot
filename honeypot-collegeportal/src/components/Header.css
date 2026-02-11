@@ -10,11 +10,11 @@
 .header-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  padding: 0.5rem 2rem; /* Reduced from 1rem 2rem */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem; /* Reduced from 2rem */
 }
 
 .logo {
@@ -32,7 +32,7 @@
 
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem; /* Reduced from 2rem */
   flex: 1;
   justify-content: center;
 }
@@ -59,7 +59,7 @@
 }
 
 .btn {
-  padding: 0.7rem 1.5rem;
+  padding: 0.5rem 1.2rem; /* Reduced from 0.7rem 1.5rem */
   border-radius: 5px;
   text-decoration: none;
   font-weight: 600;
