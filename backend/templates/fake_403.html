@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}403 Forbidden | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2>403 Forbidden</h2>
+    <p class="subtitle">
+      You do not have permission to access this resource.
+    </p>
+
+    <div class="error">
+      auditFlag=true;<!-- Internal reference: SEC-BACKUP-PATH -->
+      <br />
+      java.lang.SecurityException: Access denied to protected resource<br />
+      &nbsp;&nbsp;at com.college.portal.BackupController.handleRequest(BackupController.java:112)<br />
+      &nbsp;&nbsp;at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:190)<br />
+      &nbsp;&nbsp;... 23 more
+    </div>
+
+    <div class="helper">
+      All unauthorized access attempts are logged and reviewed by the security
+      team.
+    </div>
+  </section>
+{% endblock %}
+

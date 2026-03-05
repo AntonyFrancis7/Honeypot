@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Login | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2>Faculty Login</h2>
+    <p class="subtitle">
+      Faculty access to internal marks, attendance, and course reports.
+    </p>
+
+    <form method="POST" action="/login/faculty">
+      <div class="field">
+        <label for="faculty_id">Faculty ID</label>
+        <input
+          id="faculty_id"
+          name="faculty_id"
+          type="text"
+          placeholder="FAC-XXXX"
+          autocomplete="off"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="off"
+          required
+        />
+      </div>
+      <button type="submit">Login</button>
+      <div class="helper">
+        For account issues, contact the IT helpdesk.
+      </div>
+    </form>
+  </section>
+{% endblock %}
+

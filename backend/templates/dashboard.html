@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Honeypot Dashboard | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card" style="max-width: 960px;">
+    <h2>Honeypot Activity Dashboard</h2>
+    <p class="subtitle">
+      Overview of recent attacker activity against the college portal honeypot.
+    </p>
+
+    <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Hits per day</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Requests</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in hits_per_day %}
+          <tr>
+            <td>{{ row["day"] }}</td>
+            <td>{{ row["count"] }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="2">No data yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Top attacking IPs</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>IP Address</th>
+          <th>Requests</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in top_ips %}
+          <tr>
+            <td>{{ row["ip"] }}</td>
+            <td>{{ row["count"] }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="2">No data yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Most targeted endpoints</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Requests</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in top_paths %}
+          <tr>
+            <td>{{ row["path"] }}</td>
+            <td>{{ row["count"] }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="2">No data yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Attack type breakdown</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Attack Type</th>
+          <th>Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t, count in attack_counts.items() %}
+          <tr>
+            <td>{{ t }}</td>
+            <td>{{ count }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="2">No classified attacks yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Attacker origins (approx.)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Country / Region</th>
+          <th>Requests</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for country, count in country_counts.items() %}
+          <tr>
+            <td>{{ country }}</td>
+            <td>{{ count }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="2">No data yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}
+

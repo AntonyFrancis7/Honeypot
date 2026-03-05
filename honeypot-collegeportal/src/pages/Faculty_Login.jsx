@@ -1,13 +1,34 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
 function Faculty_Login() {
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const [facultyId, setFacultyId] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Add faculty authentication logic here
-    console.log("Faculty login attempted");
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/login/faculty", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ facultyId, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || "Authentication failed due to an unknown error.");
+      }
+    } catch (err) {
+      setError("Unable to reach the server. Please try again later.");
+    }
   };
 
   return (
@@ -18,8 +39,22 @@ function Faculty_Login() {
         <p className="subtitle">Enter your account details</p>
 
         <form onSubmit={handleSubmit}>
-          <input type="text" placeholder="Employee ID" required />
-          <input type="password" placeholder="Password" required />
+          <input
+            type="text"
+            placeholder="Employee ID"
+            value={facultyId}
+            onChange={(e) => setFacultyId(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          {error && <div className="error-message" style={{ color: "var(--red)", marginTop: "10px", fontSize: "0.9rem" }}>{error}</div>}
 
           <div className="forgot">Forgot Password?</div>
 

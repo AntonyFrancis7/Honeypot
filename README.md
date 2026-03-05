@@ -2,6 +2,86 @@
 
 A honeypot project for security research and testing.
 
+## Project Phases (Medium Interaction Web Honeypot)
+
+This project will follow these phases to build a **medium interaction web honeypot** based on a fake college portal:
+
+### Phase 1 — Design the Deceptive Surface
+- Create fake login pages and panels (e.g. `/admin`, `/login/student`, `/login/faculty`, `/wp-admin`, `/phpmyadmin`).
+- Simulate realistic responses to all login attempts (e.g. always "Wrong username or password" or "Account locked" without ever granting access).
+- Add fake routes and directories that look interesting to scanners (e.g. `/backup`, `/old_admin`, `/db_export`).
+- Ensure the UI looks like a real vulnerable web application while remaining fully isolated from any real data.
+
+## Running the Project
+
+To run the project, you have two options:
+
+### Using Scripts (Recommended)
+
+**Windows:**
+```cmd
+run.bat
+```
+
+**Linux/macOS:**
+```bash
+./run.sh
+```
+
+### Manual Startup
+
+**1. Start the Flask Backend:**
+```bash
+cd backend
+python -m venv venv
+# On Windows: venv\Scripts\activate.bat
+# On Linux/macOS: source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+*The backend will run on `http://localhost:5000`*
+
+**2. Start the React Frontend:**
+```bash
+cd honeypot-collegeportal
+npm install
+npm run dev
+```
+*The frontend will run on the Vite default port (usually `http://localhost:5173`)*
+
+### Phase 2 — Build the Emulation Layer
+- Implement a backend (e.g. Python/Flask) to handle HTTP methods (`GET`, `POST`, `OPTIONS`) for the fake endpoints.
+- Return realistic HTTP headers to mimic common web servers (Apache/Nginx/IIS style headers and version banners).
+- Simulate error responses (`404`, `403`, `500`) with believable but fake stack traces and error pages.
+- Expose form fields and request parameters that appear vulnerable to SQLi, XSS, and LFI, but never execute the payloads.
+
+### Phase 3 — Logging & Detection Engine
+- Log every interaction with:
+  - Timestamp
+  - Source IP (and later, geolocation)
+  - HTTP method and full request path
+  - User-Agent
+  - Full request payload/body where applicable
+- Store logs in a database (e.g. SQLite) for later analysis and reporting.
+
+### Phase 4 — Attack Classification
+- Analyze logged requests to classify common attack types using regex/keyword rules, for example:
+  - Patterns like `' OR 1=1` → SQL Injection
+  - Payloads containing `<script>` → XSS
+  - Paths like `../../../etc/passwd` → LFI/Path Traversal
+  - User-Agents containing `nmap`, `sqlmap`, `nikto` → Automated scanners
+  - Rapid sequential login or request bursts → Brute force / scanning activity
+- Tag each log entry with one or more detected attack types.
+
+### Phase 5 — Dashboard & Reporting
+- Build an admin dashboard (web UI) to visualize:
+  - Total hits per day
+  - Top attacking IPs and user agents
+  - Most targeted endpoints
+  - Attack type breakdown (e.g. bar/pie charts)
+  - World map or country list of attacker origins (based on IP geolocation)
+- Optionally integrate alerting (e.g. email or Telegram bot) for specific attack patterns or thresholds.
+
 ## Login Detection Hazards
 
 ### Overview

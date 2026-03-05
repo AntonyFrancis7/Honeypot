@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Sign In | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2>Administrator Sign In</h2>
+    <p class="subtitle">
+      Restricted access. All login attempts are audited.
+    </p>
+
+    <form method="POST" action="/admin/login">
+      <div class="field">
+        <label for="username">Admin Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="off"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="off"
+          required
+        />
+      </div>
+      <button type="submit">Sign In</button>
+      <div class="helper">
+        Multiple failed attempts will result in automatic lockout and audit.
+      </div>
+    </form>
+  </section>
+{% endblock %}
+

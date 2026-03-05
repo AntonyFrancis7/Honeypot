@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Login Error | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2>Authentication Error</h2>
+    <p class="subtitle">
+      {{ message or "Your login attempt could not be completed at this time." }}
+    </p>
+
+    <div class="error">
+      Error code: AUTH-{{ (range(1000, 9999) | random) }}<br />
+      Trace ID: {{ (range(100000, 999999) | random) }}-{{ (range(1000, 9999) | random) }}
+    </div>
+
+    <div class="helper">
+      If this problem persists, please contact your system administrator and
+      provide the above Trace ID.
+    </div>
+  </section>
+{% endblock %}
+

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}500 Internal Server Error | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2>Internal Server Error</h2>
+    <p class="subtitle">
+      An unexpected error occurred while processing your request.
+    </p>
+
+    <div class="error">
+      java.lang.NullPointerException: Cannot read property 'session' of null<br />
+      &nbsp;&nbsp;at com.college.portal.SessionManager.validate(SessionManager.java:54)<br />
+      &nbsp;&nbsp;at com.college.portal.AuthFilter.doFilter(AuthFilter.java:31)<br />
+      &nbsp;&nbsp;at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:190)<br />
+      &nbsp;&nbsp;... 27 more
+    </div>
+
+    <div class="helper">
+      The incident has been logged with a diagnostic trace for further
+      analysis.
+    </div>
+  </section>
+{% endblock %}
+

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}404 Not Found | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2>404 Not Found</h2>
+    <p class="subtitle">
+      The requested resource could not be located on this server.
+    </p>
+
+    <div class="error">
+      HTTP 404 /{{ request.path.strip("/") or "index" }}<br />
+      java.io.FileNotFoundException: Resource not found in dispatcher mapping<br />
+      &nbsp;&nbsp;at com.college.portal.Router.resolve(Router.java:87)<br />
+      &nbsp;&nbsp;at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)<br />
+      &nbsp;&nbsp;... 19 more
+    </div>
+
+    <div class="helper">
+      Note: Access to deprecated endpoints is restricted and monitored.
+    </div>
+  </section>
+{% endblock %}
+

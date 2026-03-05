@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Student Login | College Portal{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2>Student Login</h2>
+    <p class="subtitle">Access timetables, internal marks, and attendance.</p>
+
+    <form method="POST" action="/login/student">
+      <div class="field">
+        <label for="roll">Roll Number</label>
+        <input
+          id="roll"
+          name="roll"
+          type="text"
+          placeholder="CSE21XXX"
+          autocomplete="off"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="off"
+          required
+        />
+      </div>
+      <button type="submit">Login</button>
+      <div class="helper">
+        If you forget your password, contact the exam cell administrator.
+      </div>
+    </form>
+  </section>
+{% endblock %}
+
