@@ -12,18 +12,25 @@ function Student_Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     try {
-      const response = await fetch("http://localhost:5000/api/login/student", {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const response = await fetch(`${API_URL}/api/login/student`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ roll, password }),
+        body: JSON.stringify({ roll, password, sessionId: sessionStorage.getItem("honeypot_session") }),
       });
 
       const data = await response.json();
-      if (!response.ok) {
+      if (data.redirect) {
+        if (data.redirect.startsWith("http")) {
+          window.location.href = data.redirect;
+        } else {
+          window.location.href = API_URL + data.redirect;
+        }
+      } else if (!response.ok) {
         setError(data.error || "Login failed due to an unknown error.");
       }
     } catch (err) {
@@ -37,24 +44,30 @@ function Student_Login() {
       <div className="left-panel">
         <h2>Student Login</h2>
         <p className="subtitle">Enter your account details</p>
+        
+        <div style={{ background: "rgba(0, 150, 255, 0.1)", border: "1px solid rgba(0, 150, 255, 0.3)", color: "var(--text-color)", padding: "10px", borderRadius: "5px", marginBottom: "15px", fontSize: "0.85rem", textAlign: "left" }}>
+          <strong>Valid Demo Credentials:</strong><br/>
+          Roll Number: 12345<br/>
+          Password: password123
+        </div>
 
         <form onSubmit={handleSubmit}>
-          <input 
-            type="text" 
-            placeholder="Roll Number / Email" 
+          <input
+            type="text"
+            placeholder="Roll Number / Email"
             value={roll}
             onChange={(e) => setRoll(e.target.value)}
-            required 
+            required
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
+          <input
+            type="password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required 
+            required
           />
 
-          {error && <div className="error-message" style={{color: "var(--red)", marginTop: "10px", fontSize: "0.9rem"}}>{error}</div>}
+          {error && <div className="error-message" style={{ color: "var(--red)", marginTop: "10px", fontSize: "0.9rem" }}>{error}</div>}
 
           <div className="forgot">Forgot Password?</div>
 

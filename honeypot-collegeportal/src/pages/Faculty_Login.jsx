@@ -14,16 +14,23 @@ function Faculty_Login() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/login/faculty", {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const response = await fetch(`${API_URL}/api/login/faculty`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ facultyId, password }),
+        body: JSON.stringify({ facultyId, password, sessionId: sessionStorage.getItem("honeypot_session") }),
       });
 
       const data = await response.json();
-      if (!response.ok) {
+      if (data.redirect) {
+        if (data.redirect.startsWith("http")) {
+          window.location.href = data.redirect;
+        } else {
+          window.location.href = API_URL + data.redirect;
+        }
+      } else if (!response.ok) {
         setError(data.error || "Authentication failed due to an unknown error.");
       }
     } catch (err) {
@@ -37,6 +44,12 @@ function Faculty_Login() {
       <div className="left-panel">
         <h2>Faculty Login</h2>
         <p className="subtitle">Enter your account details</p>
+
+        <div style={{ background: "rgba(0, 150, 255, 0.1)", border: "1px solid rgba(0, 150, 255, 0.3)", color: "var(--text-color)", padding: "10px", borderRadius: "5px", marginBottom: "15px", fontSize: "0.85rem", textAlign: "left" }}>
+          <strong>Valid Demo Credentials:</strong><br/>
+          Employee ID: FAC123<br/>
+          Password: password123
+        </div>
 
         <form onSubmit={handleSubmit}>
           <input
