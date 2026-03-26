@@ -22,6 +22,27 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+def get_real_ip() -> str:
+    """
+    Safely extract the real client IP, even through multiple layer proxies like Cloudflare -> Render.
+    """
+    # If Cloudflare is fronting the app, this gives the real client
+    true_client = request.headers.get("True-Client-IP")
+    if true_client:
+        return true_client.strip()
+        
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip.strip()
+        
+    # X-Forwarded-For looks like: 120.61.x.x, 172.69.x.x, 10.x.x.x
+    fwded_for = request.headers.get("X-Forwarded-For")
+    if fwded_for:
+        return fwded_for.split(",")[0].strip()
+        
+    return request.remote_addr or "unknown"
+
+
 def get_db() -> sqlite3.Connection:
     if "db" not in g:
         try:
@@ -102,7 +123,7 @@ def log_request(extra_payload: Optional[Dict[str, Any]] = None, extra_labels: Op
     try:
         db = get_db()
 
-        ip = request.remote_addr or "unknown"
+        ip = get_real_ip()
         method = request.method
         path = request.path
         user_agent = request.headers.get("User-Agent", "")
@@ -192,7 +213,7 @@ def create_app() -> Flask:
     
     app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
     
-    # Trust the reverse proxy (Render) to provide the correct client IP in X-Forwarded-For
+    # Trust the reverse proxy (Render) to provide correct IP protocols
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     # Simple, functional CORS logic for the React Frontend hosted (like Vercel)
@@ -279,7 +300,7 @@ def create_app() -> Flask:
         try:
             username = request.form.get("username", "")
             password = request.form.get("password", "")
-            ip = request.remote_addr or "unknown"
+            ip = get_real_ip()
             attack_tag = check_and_record_attempt("unknown", ip, username)
             extra_labels = {attack_tag} if attack_tag else None
             
@@ -298,7 +319,7 @@ def create_app() -> Flask:
         try:
             roll = request.form.get("roll", "")
             password = request.form.get("password", "")
-            ip = request.remote_addr or "unknown"
+            ip = get_real_ip()
             attack_tag = check_and_record_attempt("unknown", ip, roll)
             extra_labels = {attack_tag} if attack_tag else None
             
@@ -316,7 +337,7 @@ def create_app() -> Flask:
         try:
             faculty_id = request.form.get("faculty_id", "")
             password = request.form.get("password", "")
-            ip = request.remote_addr or "unknown"
+            ip = get_real_ip()
             attack_tag = check_and_record_attempt("unknown", ip, faculty_id)
             extra_labels = {attack_tag} if attack_tag else None
             
@@ -340,7 +361,7 @@ def create_app() -> Flask:
             roll = data.get("roll", "")
             password = data.get("password", "")
             session_id = data.get("sessionId", "")
-            ip = request.remote_addr or "unknown"
+            ip = get_real_ip()
 
             # Classify attack based on submitted credentials
             probe = json.dumps({"roll": roll, "password": password})
@@ -383,7 +404,7 @@ def create_app() -> Flask:
             faculty_id = data.get("facultyId", "")
             password = data.get("password", "")
             session_id = data.get("sessionId", "")
-            ip = request.remote_addr or "unknown"
+            ip = get_real_ip()
 
             # Classify attack based on submitted credentials
             probe = json.dumps({"facultyId": faculty_id, "password": password})
@@ -425,7 +446,7 @@ def create_app() -> Flask:
             username = data.get("username", "")
             password = data.get("password", "")
             session_id = data.get("sessionId", "")
-            ip = request.remote_addr or "unknown"
+            ip = get_real_ip()
             
             attack_tag = check_and_record_attempt(session_id, ip, username)
             extra_labels = {attack_tag} if attack_tag else None
@@ -457,7 +478,7 @@ def create_app() -> Flask:
             webrtc_ips = json.dumps(data.get("webrtcIps", []))
             fingerprint = json.dumps(data.get("fingerprint", {}))
             
-            ip = request.remote_addr or "unknown"
+            ip = get_real_ip()
             timestamp = datetime.utcnow().isoformat()
             
             db = get_db()
