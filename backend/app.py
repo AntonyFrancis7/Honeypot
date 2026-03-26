@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Set
 
 from flask import Flask, request, render_template, redirect, url_for, g, jsonify
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 try:
     from backend.attack_classifier import classify_attack
 except ImportError:
@@ -190,6 +191,10 @@ def create_app() -> Flask:
     init_db()
     
     app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
+    
+    # Trust the reverse proxy (Render) to provide the correct client IP in X-Forwarded-For
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
     # Simple, functional CORS logic for the React Frontend hosted (like Vercel)
     CORS(app, resources={r"/*": {"origins": "*"}})
 
