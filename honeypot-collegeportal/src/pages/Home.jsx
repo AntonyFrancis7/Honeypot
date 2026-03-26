@@ -1,20 +1,74 @@
+import { useEffect, useRef, useState } from "react";
 import "./Home.css";
 
 function Home() {
+  const observerRef = useRef(null);
+  
+  const words = ["Academic Excellence", "Professional Growth", "Innovation & Research", "Global Leadership"];
+  const [currentWord, setCurrentWord] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    const type = () => {
+      const current = words[wordIndex];
+      if (isDeleting) {
+        setCurrentWord(current.substring(0, currentWord.length - 1));
+      } else {
+        setCurrentWord(current.substring(0, currentWord.length + 1));
+      }
+      let typeSpeed = isDeleting ? 30 : 100;
+      if (!isDeleting && currentWord === current) {
+        typeSpeed = 2000;
+        setIsDeleting(true);
+      } else if (isDeleting && currentWord === "") {
+        setIsDeleting(false);
+        setWordIndex((prev) => (prev + 1) % words.length);
+        typeSpeed = 400;
+      }
+      timer = setTimeout(type, typeSpeed);
+    };
+    timer = setTimeout(type, 100);
+    return () => clearTimeout(timer);
+  }, [currentWord, isDeleting, wordIndex]);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-up-visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('.fade-section').forEach(el => {
+      observerRef.current.observe(el);
+    });
+    
+    return () => observerRef.current?.disconnect();
+  }, []);
+
   return (
     <div className="home">
+      <div className="notice-ticker">
+        <div className="ticker-text">
+          <span>🔔 Important: Fall Semester Registration Closes Friday! &nbsp; | &nbsp; 🔔 Final Year Project Submissions Extended &nbsp; | &nbsp; 🔔 Scheduled Maintenance Window This Weekend </span>
+          <span>🔔 Important: Fall Semester Registration Closes Friday! &nbsp; | &nbsp; 🔔 Final Year Project Submissions Extended &nbsp; | &nbsp; 🔔 Scheduled Maintenance Window This Weekend </span>
+        </div>
+      </div>
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
           <h1>Welcome to Our College Portal</h1>
-          <p>Your Gateway to Academic Excellence and Professional Growth</p>
+          <p>Your Gateway to <span className="typing-text">{currentWord}</span><span className="cursor">|</span></p>
           <button className="cta-button">Explore More</button>
         </div>
       </section>
 
       {/* About Section */}
-      <section id="about" className="about">
-        <div className="container">
+      <section id="about" className="about fade-section">
+        <div className="home-container">
           <h2>About Our College</h2>
           <div className="about-content">
             <div className="about-text">
@@ -60,8 +114,8 @@ function Home() {
       </section>
 
       {/* Achievements Section */}
-      <section id="achievements" className="achievements">
-        <div className="container">
+      <section id="achievements" className="achievements fade-section">
+        <div className="home-container">
           <h2>Our Achievements</h2>
           <div className="achievements-grid">
             <div className="achievement-card">
@@ -116,8 +170,8 @@ function Home() {
       </section>
 
       {/* Placements Section */}
-      <section id="placements" className="placements">
-        <div className="container">
+      <section id="placements" className="placements fade-section">
+        <div className="home-container">
           <h2>Placement Statistics</h2>
           <div className="placements-grid">
             <div className="placement-stat">
@@ -145,22 +199,36 @@ function Home() {
       </section>
 
       {/* Top Recruiters Section */}
-      <section className="recruiters">
-        <div className="container">
+      <section className="recruiters fade-section">
+        <div className="home-container">
           <h2>Top Recruiters</h2>
-          <div className="recruiter-logos">
-            <div className="recruiter-card">Google</div>
-            <div className="recruiter-card">Microsoft</div>
-            <div className="recruiter-card">Amazon</div>
-            <div className="recruiter-card">TCS</div>
-            <div className="recruiter-card">Infosys</div>
-            <div className="recruiter-card">Wipro</div>
-            <div className="recruiter-card">Accenture</div>
-            <div className="recruiter-card">IBM</div>
-            <div className="recruiter-card">Cognizant</div>
-            <div className="recruiter-card">HCL</div>
-            <div className="recruiter-card">Capgemini</div>
-            <div className="recruiter-card">Deloitte</div>
+          <div className="recruiter-logos-container">
+            <div className="recruiter-track">
+              <div className="recruiter-card">Google</div>
+              <div className="recruiter-card">Microsoft</div>
+              <div className="recruiter-card">Amazon</div>
+              <div className="recruiter-card">TCS</div>
+              <div className="recruiter-card">Infosys</div>
+              <div className="recruiter-card">Wipro</div>
+              <div className="recruiter-card">Accenture</div>
+              <div className="recruiter-card">IBM</div>
+              <div className="recruiter-card">Cognizant</div>
+              <div className="recruiter-card">HCL</div>
+              <div className="recruiter-card">Capgemini</div>
+              <div className="recruiter-card">Deloitte</div>
+              <div className="recruiter-card">Google</div>
+              <div className="recruiter-card">Microsoft</div>
+              <div className="recruiter-card">Amazon</div>
+              <div className="recruiter-card">TCS</div>
+              <div className="recruiter-card">Infosys</div>
+              <div className="recruiter-card">Wipro</div>
+              <div className="recruiter-card">Accenture</div>
+              <div className="recruiter-card">IBM</div>
+              <div className="recruiter-card">Cognizant</div>
+              <div className="recruiter-card">HCL</div>
+              <div className="recruiter-card">Capgemini</div>
+              <div className="recruiter-card">Deloitte</div>
+            </div>
           </div>
         </div>
       </section>

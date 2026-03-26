@@ -1,0 +1,293 @@
+/* Fake Dashboard — shared styles for Student & Faculty portals */
+
+:root {
+  --fd-bg: #0f1117;
+  --fd-sidebar: #161b27;
+  --fd-card: #1c2135;
+  --fd-border: rgba(255,255,255,0.07);
+  --fd-text: #e2e8f0;
+  --fd-muted: #94a3b8;
+  --fd-accent: #4f8ef7;
+  --fd-green: #22c55e;
+  --fd-yellow: #f59e0b;
+  --fd-red: #ef4444;
+  --fd-purple: #a78bfa;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.fd-root {
+  display: flex;
+  min-height: 100vh;
+  background: var(--fd-bg);
+  color: var(--fd-text);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ── Sidebar ── */
+.fd-sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: var(--fd-sidebar);
+  border-right: 1px solid var(--fd-border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  flex-shrink: 0;
+}
+
+.fd-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--fd-border);
+}
+
+.fd-logo-icon {
+  width: 40px; height: 40px;
+  background: var(--fd-accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.85rem; color: #fff;
+  flex-shrink: 0;
+}
+
+.fd-logo-title { font-size: 0.85rem; font-weight: 700; color: var(--fd-text); }
+.fd-logo-sub { font-size: 0.7rem; color: var(--fd-muted); }
+
+.fd-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fd-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--fd-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.fd-nav-item:hover { background: rgba(255,255,255,0.05); color: var(--fd-text); }
+.fd-nav-item.active { background: rgba(79,142,247,0.15); color: var(--fd-accent); font-weight: 600; }
+
+.fd-sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--fd-border);
+}
+
+.fd-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--fd-accent), var(--fd-purple));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+}
+
+.fd-username { font-size: 0.8rem; font-weight: 600; }
+.fd-roll { font-size: 0.7rem; color: var(--fd-muted); }
+
+/* ── Main ── */
+.fd-main {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+.fd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.fd-heading { font-size: 1.5rem; font-weight: 700; }
+.fd-subheading { font-size: 0.875rem; color: var(--fd-muted); margin-top: 4px; }
+
+.fd-semester-badge {
+  background: rgba(79,142,247,0.15);
+  color: var(--fd-accent);
+  border: 1px solid rgba(79,142,247,0.3);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Stat Cards ── */
+.fd-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.fd-card {
+  background: var(--fd-card);
+  border: 1px solid var(--fd-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.fd-card-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fd-muted); margin-bottom: 8px; }
+.fd-card-value { font-size: 2rem; font-weight: 800; margin-bottom: 4px; }
+.fd-card-value.green { color: var(--fd-green); }
+.fd-card-value.yellow { color: var(--fd-yellow); }
+.fd-card-value.blue { color: var(--fd-accent); }
+.fd-card-value.purple { color: var(--fd-purple); }
+.fd-card-value.red { color: var(--fd-red); }
+.fd-card-sub { font-size: 0.75rem; color: var(--fd-muted); }
+
+/* ── Section Title ── */
+.fd-section-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fd-muted);
+  margin-bottom: 12px;
+}
+
+/* ── Profile Grid ── */
+.fd-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.fd-profile-item {
+  background: var(--fd-card);
+  border: 1px solid var(--fd-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fd-profile-label { font-size: 0.7rem; color: var(--fd-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.fd-profile-value { font-size: 0.9rem; font-weight: 500; }
+
+/* ── Table ── */
+.fd-table-wrap { overflow-x: auto; }
+
+.fd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.fd-table th {
+  background: rgba(255,255,255,0.04);
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--fd-muted);
+  border-bottom: 1px solid var(--fd-border);
+}
+
+.fd-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--fd-border);
+  vertical-align: middle;
+}
+
+.fd-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.fd-row-bold td { font-weight: 700; color: var(--fd-green); border-top: 1px solid var(--fd-border); }
+
+.fd-badge {
+  background: rgba(79,142,247,0.12);
+  color: var(--fd-accent);
+  border: 1px solid rgba(79,142,247,0.25);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Progress Bar ── */
+.fd-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fd-bar {
+  height: 6px;
+  border-radius: 99px;
+  min-width: 4px;
+  max-width: 100px;
+  transition: width 0.3s;
+}
+
+/* ── Status Chips ── */
+.fd-status {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.fd-status.ok { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+.fd-status.low { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+
+/* ── Grade Chips ── */
+.fd-grade {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.grade-Ap { background: rgba(34,197,94,0.15); color: #4ade80; }
+.grade-A  { background: rgba(79,142,247,0.15); color: #7eb3ff; }
+.grade-Bp { background: rgba(167,139,250,0.15); color: #c4b5fd; }
+.grade-B  { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.grade-Cp { background: rgba(239,68,68,0.15); color: #f87171; }
+.grade-C  { background: rgba(239,68,68,0.15); color: #f87171; }
+
+/* ── CGPA Banner ── */
+.fd-cgpa-banner {
+  background: rgba(79,142,247,0.1);
+  border: 1px solid rgba(79,142,247,0.25);
+  color: #7eb3ff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+/* ── Notice Cards ── */
+.fd-notices { display: flex; flex-direction: column; gap: 12px; }
+
+.fd-notice-card {
+  background: var(--fd-card);
+  border: 1px solid var(--fd-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.fd-notice-date { font-size: 0.72rem; color: var(--fd-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.fd-notice-title { font-size: 0.9rem; font-weight: 500; }
+
+/* ── Misc ── */
+.fd-empty { color: var(--fd-muted); text-align: center; }

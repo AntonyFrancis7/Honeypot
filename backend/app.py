@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import sqlite3
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 
 try:
     import psycopg2
@@ -147,7 +147,7 @@ def execute_query(db, query, args=(), fetchall=False) -> Any:
         return None
 
 
-def log_request(extra_payload: Optional[Dict[str, Any]] = None) -> None:
+def log_request(extra_payload: Optional[Dict[str, Any]] = None, extra_labels: Optional[Set[str]] = None) -> None:
     """
     Log the current request with basic classification.
     """
@@ -177,6 +177,8 @@ def log_request(extra_payload: Optional[Dict[str, Any]] = None) -> None:
 
     payload_str = json.dumps(payload_data, default=str)
     labels = classify_attack(payload_str, user_agent)
+    if extra_labels:
+        labels.update(extra_labels)
 
     timestamp = datetime.utcnow().isoformat()
 
@@ -189,14 +191,14 @@ def log_request(extra_payload: Optional[Dict[str, Any]] = None) -> None:
     )
 
 
-def check_and_record_attempt(session_id: str, ip: str, login_id: str) -> bool:
+def check_and_record_attempt(session_id: str, ip: str, login_id: str) -> Optional[str]:
     """
-    Returns True if the user has EXCEEDED the 5-attempt limit (either 5 total attempts or 5 unique IDs).
-    Returns False if they are still within the limit.
+    Returns 'PasswordSpray', 'BruteForce', or None based on attempt history.
     """
     db = get_db()
     timestamp = datetime.utcnow().isoformat()
-    
+    window_start = (datetime.utcnow() - timedelta(minutes=10)).isoformat()
+
     # 1. Record this attempt
     execute_query(db,
         """
@@ -205,28 +207,28 @@ def check_and_record_attempt(session_id: str, ip: str, login_id: str) -> bool:
         """,
         (session_id, ip, login_id, timestamp),
     )
-    
-    # 2. Check thresholds (grouping by session_id; if empty, group by IP)
-    is_postgres = getattr(g, 'is_postgres', False)
-    
+
+    # 2. Check thresholds within the rolling window (group by session_id; fall back to IP)
     if session_id and session_id != "unknown":
-        query_total = "SELECT COUNT(*) as cnt FROM login_attempts WHERE session_id = ?"
-        query_unique = "SELECT COUNT(DISTINCT login_id) as cnt FROM login_attempts WHERE session_id = ?"
-        param = (session_id,)
+        query_total = "SELECT COUNT(*) as cnt FROM login_attempts WHERE session_id = ? AND timestamp > ?"
+        query_unique = "SELECT COUNT(DISTINCT login_id) as cnt FROM login_attempts WHERE session_id = ? AND timestamp > ?"
+        param = (session_id, window_start)
     else:
-        query_total = "SELECT COUNT(*) as cnt FROM login_attempts WHERE ip = ?"
-        query_unique = "SELECT COUNT(DISTINCT login_id) as cnt FROM login_attempts WHERE ip = ?"
-        param = (ip,)
-        
+        query_total = "SELECT COUNT(*) as cnt FROM login_attempts WHERE ip = ? AND timestamp > ?"
+        query_unique = "SELECT COUNT(DISTINCT login_id) as cnt FROM login_attempts WHERE ip = ? AND timestamp > ?"
+        param = (ip, window_start)
+
     res_total = execute_query(db, query_total, param, fetchall=True)
     res_unique = execute_query(db, query_unique, param, fetchall=True)
-    
+
     total_count = res_total[0]["cnt"] if res_total else 0
     unique_count = res_unique[0]["cnt"] if res_unique else 0
-    
-    if total_count > 5 or unique_count > 5:
-        return True
-    return False
+
+    if unique_count > 5:
+        return "PasswordSpray"
+    if total_count > 5:
+        return "BruteForce"
+    return None
 
 
 def create_app() -> Flask:
@@ -291,7 +293,11 @@ def create_app() -> Flask:
     def fake_admin_login():
         username = request.form.get("username", "")
         password = request.form.get("password", "")
-        log_request({"username": username, "password": password})
+        ip = request.remote_addr or "unknown"
+        attack_tag = check_and_record_attempt("unknown", ip, username)
+        extra_labels = {attack_tag} if attack_tag else None
+        
+        log_request({"username": username, "password": password}, extra_labels=extra_labels)
         # Always fail with realistic message
         return render_template(
             "fake_error.html",
@@ -302,7 +308,11 @@ def create_app() -> Flask:
     def fake_student_login():
         roll = request.form.get("roll", "")
         password = request.form.get("password", "")
-        log_request({"roll": roll, "password": password})
+        ip = request.remote_addr or "unknown"
+        attack_tag = check_and_record_attempt("unknown", ip, roll)
+        extra_labels = {attack_tag} if attack_tag else None
+        
+        log_request({"roll": roll, "password": password}, extra_labels=extra_labels)
         return render_template(
             "fake_error.html",
             message="Login failed. Your account is under review by the administrator.",
@@ -312,7 +322,11 @@ def create_app() -> Flask:
     def fake_faculty_login():
         faculty_id = request.form.get("faculty_id", "")
         password = request.form.get("password", "")
-        log_request({"faculty_id": faculty_id, "password": password})
+        ip = request.remote_addr or "unknown"
+        attack_tag = check_and_record_attempt("unknown", ip, faculty_id)
+        extra_labels = {attack_tag} if attack_tag else None
+        
+        log_request({"faculty_id": faculty_id, "password": password}, extra_labels=extra_labels)
         return render_template(
             "fake_error.html",
             message="Authentication failed. Please contact IT support.",
@@ -329,27 +343,45 @@ def create_app() -> Flask:
         password = data.get("password", "")
         session_id = data.get("sessionId", "")
         ip = request.remote_addr or "unknown"
-        
+
+        # Classify attack based on submitted credentials
+        probe = json.dumps({"roll": roll, "password": password})
+        user_agent = request.headers.get("User-Agent", "")
+        attack_labels = classify_attack(probe, user_agent)
+
+        attack_tag = check_and_record_attempt(session_id, ip, roll)
+        extra_labels = {attack_tag} if attack_tag else None
+
+        # Always log and flag every attempt
+        log_request({"roll": roll, "password": password, "session_id": session_id}, extra_labels=extra_labels)
+
+        # If an injection/traversal attack is detected → let them "in" to fake dashboard
+        if attack_labels & {"SQLi", "XSS", "LFI"}:
+            return jsonify({
+                "status": "trapped",
+                "redirect": "/dashboard/student"
+            }), 200
+
+        # Bait credentials — attacker must actually "find" this to enter the fake dashboard
+        # student 1 - quick entry
         if roll == "12345" and password == "password123":
             return jsonify({
-                "status": "success",
-                "redirect": "https://christ.etlab.app/user/login"
+                "status": "trapped",
+                "redirect": "/dashboard/student"
             }), 200
-        
-        exceeded = check_and_record_attempt(session_id, ip, roll)
-        
-        if exceeded:
-            log_request({"roll": roll, "password": password, "session_id": session_id})
+
+        # student 2 - brute force demo
+        if roll == "123456" and password == "15":
             return jsonify({
-                "error": "Security violation detected. Redirecting...",
-                "status": "locked",
-                "redirect": "/admin" # Command frontend to bounce them
-            }), 403
-            
+                "status": "trapped",
+                "redirect": "/dashboard/student"
+            }), 200
+
         return jsonify({
             "error": "Login failed. Invalid roll number or password.",
             "status": "failed"
         }), 401
+
 
     @app.route("/api/login/faculty", methods=["POST"])
     def api_faculty_login():
@@ -358,23 +390,40 @@ def create_app() -> Flask:
         password = data.get("password", "")
         session_id = data.get("sessionId", "")
         ip = request.remote_addr or "unknown"
-        
-        if faculty_id == "FAC123" and password == "password123":
+
+        # Classify attack based on submitted credentials
+        probe = json.dumps({"facultyId": faculty_id, "password": password})
+        user_agent = request.headers.get("User-Agent", "")
+        attack_labels = classify_attack(probe, user_agent)
+
+        attack_tag = check_and_record_attempt(session_id, ip, faculty_id)
+        extra_labels = {attack_tag} if attack_tag else None
+
+        # Always log and flag every attempt
+        log_request({"faculty_id": faculty_id, "password": password, "session_id": session_id}, extra_labels=extra_labels)
+
+        # If an injection/traversal attack is detected → let them "in" to fake dashboard
+        if attack_labels & {"SQLi", "XSS", "LFI"}:
             return jsonify({
-                "status": "success",
-                "redirect": "https://christ.etlab.app/user/login"
+                "status": "trapped",
+                "redirect": "/dashboard/faculty"
             }), 200
-        
-        exceeded = check_and_record_attempt(session_id, ip, faculty_id)
-        
-        if exceeded:
-            log_request({"faculty_id": faculty_id, "password": password, "session_id": session_id})
+
+        # Bait credentials — attacker must actually "find" this to enter the fake dashboard
+        # faculty 1 - quick entry
+        if faculty_id == "123" and password == "password123":
             return jsonify({
-                "error": "Security limit exceeded. Redirecting...",
-                "status": "locked",
-                "redirect": "/admin"
-            }), 403
-            
+                "status": "trapped",
+                "redirect": "/dashboard/faculty"
+            }), 200
+
+        # faculty 2 - brute force demo
+        if faculty_id == "1234" and password == "15":
+            return jsonify({
+                "status": "trapped",
+                "redirect": "/dashboard/faculty"
+            }), 200
+
         return jsonify({
             "error": "Authentication failed. Invalid employee ID or password.",
             "status": "failed"
@@ -388,10 +437,12 @@ def create_app() -> Flask:
         session_id = data.get("sessionId", "")
         ip = request.remote_addr or "unknown"
         
-        exceeded = check_and_record_attempt(session_id, ip, username)
+        attack_tag = check_and_record_attempt(session_id, ip, username)
+        extra_labels = {attack_tag} if attack_tag else None
         
-        if exceeded:
-            log_request({"username": username, "password": password, "session_id": session_id})
+        log_request({"username": username, "password": password, "session_id": session_id}, extra_labels=extra_labels)
+        
+        if attack_tag:
             return jsonify({
                 "error": "Account lock triggered. Redirecting...",
                 "status": "locked",
@@ -441,9 +492,31 @@ def create_app() -> Flask:
     # Dashboard & reporting
     # -------------------------
 
+    DASHBOARD_TOKEN = os.environ.get("DASHBOARD_TOKEN", "honeypot-admin")
+
+    @app.route("/api/logs/recent")
+    def api_recent_logs():
+        token = request.args.get("token", "")
+        if token != DASHBOARD_TOKEN:
+            return jsonify({"error": "Unauthorized"}), 403
+            
+        db = get_db()
+        recent_logs = execute_query(db,
+            """
+            SELECT timestamp, ip, path, payload, attack_types
+            FROM logs
+            ORDER BY id DESC
+            LIMIT 50
+            """, fetchall=True)
+            
+        return jsonify([dict(row) for row in recent_logs])
+
     @app.route("/dashboard")
     def dashboard():
-        log_request()
+        token = request.args.get("token", "")
+        if token != DASHBOARD_TOKEN:
+            return render_template("fake_403.html"), 403
+        # Do NOT log dashboard visits — avoids polluting attack data with admin traffic
         db = get_db()
 
         # Total hits per day
@@ -497,6 +570,15 @@ def create_app() -> Flask:
         all_logs = execute_query(db, "SELECT ip FROM logs", fetchall=True)
         country_counts["Unknown"] = len(all_logs)
 
+        # Recent 50 attacks
+        recent_logs = execute_query(db,
+            """
+            SELECT timestamp, ip, path, payload, attack_types
+            FROM logs
+            ORDER BY id DESC
+            LIMIT 50
+            """, fetchall=True)
+
         return render_template(
             "dashboard.html",
             hits_per_day=hits_per_day,
@@ -504,6 +586,7 @@ def create_app() -> Flask:
             top_paths=top_paths,
             attack_counts=attack_counts,
             country_counts=country_counts,
+            recent_logs=recent_logs,
         )
 
     return app

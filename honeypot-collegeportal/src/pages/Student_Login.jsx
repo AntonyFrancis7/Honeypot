@@ -28,7 +28,8 @@ function Student_Login() {
         if (data.redirect.startsWith("http")) {
           window.location.href = data.redirect;
         } else {
-          window.location.href = API_URL + data.redirect;
+          // Relative redirect stays on the same host (frontend), not the backend API
+          window.location.href = window.location.origin + data.redirect;
         }
       } else if (!response.ok) {
         setError(data.error || "Login failed due to an unknown error.");
@@ -45,11 +46,6 @@ function Student_Login() {
         <h2>Student Login</h2>
         <p className="subtitle">Enter your account details</p>
         
-        <div style={{ background: "rgba(0, 150, 255, 0.1)", border: "1px solid rgba(0, 150, 255, 0.3)", color: "var(--text-color)", padding: "10px", borderRadius: "5px", marginBottom: "15px", fontSize: "0.85rem", textAlign: "left" }}>
-          <strong>Valid Demo Credentials:</strong><br/>
-          Roll Number: 12345<br/>
-          Password: password123
-        </div>
 
         <form onSubmit={handleSubmit}>
           <input

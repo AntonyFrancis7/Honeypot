@@ -9,6 +9,48 @@
       Overview of recent attacker activity against the college portal honeypot.
     </p>
 
+    <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Recent Attacks (Latest 50)</h3>
+    <div style="overflow-x: auto;">
+      <table style="table-layout: fixed; width: 100%;">
+        <thead>
+          <tr>
+            <th style="width: 12%;">Time</th>
+            <th style="width: 12%;">IP Address</th>
+            <th style="width: 10%;">Country</th>
+            <th style="width: 14%;">Location</th>
+            <th style="width: 12%;">Endpoint</th>
+            <th style="width: 30%;">Captured Payload</th>
+            <th style="width: 10%;">Flags</th>
+          </tr>
+        </thead>
+        <tbody id="recent-logs-body">
+          {% for log in recent_logs %}
+            <tr>
+              <td style="font-size: 0.8rem;">{{ log["timestamp"][:19] | replace("T", " ") }}</td>
+              <td style="font-family: monospace;">{{ log["ip"] }}</td>
+              <td style="font-size: 0.85rem; color: #999;">Loading...</td>
+              <td style="font-size: 0.85rem; color: #999;">Loading...</td>
+              <td style="font-family: monospace; font-size: 0.8rem; word-break: break-all;">{{ log["path"] }}</td>
+              <td style="font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 4px;">{{ log["payload"] }}</td>
+              <td>
+                {% if log["attack_types"] %}
+                  <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
+                    {{ log["attack_types"] }}
+                  </span>
+                {% else %}
+                  <span style="color: #6b7280; font-size: 0.8rem;">(None)</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7">No attacks logged yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
     <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Hits per day</h3>
     <table>
       <thead>
@@ -119,5 +161,99 @@
       </tbody>
     </table>
   </section>
+
+  <script>
+    const ipLocationCache = {};
+    
+    async function fetchRecentLogs() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token') || '';
+      
+      try {
+        const res = await fetch(`/api/logs/recent?token=${token}`);
+        const data = await res.json();
+        
+        if (data.error || !Array.isArray(data)) return;
+        
+        const tbody = document.getElementById('recent-logs-body');
+        if (!tbody) return;
+        
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7">No attacks logged yet.</td></tr>';
+          return;
+        }
+
+        const ipsToFetch = [...new Set(data.map(d => d.ip))].filter(ip => {
+           if (ipLocationCache[ip]) return false;
+           if (ip === "127.0.0.1" || ip === "localhost" || ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.") || ip === "::1") {
+              ipLocationCache[ip] = { country: "Local Network", lat: 0, lon: 0 };
+              return false;
+           }
+           return true;
+        });
+
+        for (const ip of ipsToFetch) {
+          try {
+            const ipRes = await fetch(`http://ip-api.com/json/${ip}`);
+            const ipData = await ipRes.json();
+            if (ipData.status === "success") {
+              ipLocationCache[ip] = { country: ipData.country, lat: ipData.lat, lon: ipData.lon };
+            } else {
+              ipLocationCache[ip] = { country: "Unknown API err", lat: null, lon: null };
+            }
+          } catch (e) {
+            ipLocationCache[ip] = { country: "Unknown (CORS/Err)", lat: null, lon: null };
+          }
+        }
+        
+        let html = '';
+        data.forEach(log => {
+          const timestamp = log.timestamp ? log.timestamp.substring(0, 19).replace('T', ' ') : '';
+          const ip = log.ip || '';
+          const path = log.path || '';
+          const payload = log.payload || '';
+          const attack_types = log.attack_types || '';
+          
+          let flagHtml = '';
+          if (attack_types) {
+            flagHtml = `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">${attack_types}</span>`;
+          } else {
+            flagHtml = `<span style="color: #6b7280; font-size: 0.8rem;">(None)</span>`;
+          }
+
+          const loc = ipLocationCache[ip] || { country: "Loading...", lat: null, lon: null };
+          
+          let mapHtml = '';
+          if (loc.lat !== null && loc.lon !== null && loc.lat !== 0) {
+            mapHtml = `<a href="https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lon}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 0.8rem; border-bottom: 1px dashed #667eea; padding-bottom: 1px;">📍 ${loc.lat}, ${loc.lon}</a>`;
+          } else if (loc.lat === 0) {
+             mapHtml = `<span style="color: #999; font-size: 0.8rem;">📍 Localhost</span>`;
+          } else {
+             mapHtml = `<span style="color: #999; font-size: 0.8rem;">📍 N/A</span>`;
+          }
+          
+          html += `
+            <tr>
+              <td style="font-size: 0.8rem;">${timestamp}</td>
+              <td style="font-family: monospace;">${ip}</td>
+              <td style="font-size: 0.85rem;">${loc.country}</td>
+              <td>${mapHtml}</td>
+              <td style="font-family: monospace; font-size: 0.8rem; word-break: break-all;">${path}</td>
+              <td style="font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 4px;">${payload}</td>
+              <td>${flagHtml}</td>
+            </tr>
+          `;
+        });
+        
+        tbody.innerHTML = html;
+      } catch(err) {
+        console.error("Fetch logs err", err);
+      }
+    }
+    
+    // Call immediately, then refresh every 3 seconds
+    fetchRecentLogs();
+    setInterval(fetchRecentLogs, 3000);
+  </script>
 {% endblock %}
 
