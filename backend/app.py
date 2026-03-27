@@ -232,6 +232,11 @@ def create_app() -> Flask:
     # Deceptive surface routes
     # -------------------------
 
+    @app.route("/ping")
+    def ping():
+        # Health check endpoint for UptimeRobot (does NOT log anything)
+        return "ok", 200
+
     @app.route("/")
     def index():
         try:
