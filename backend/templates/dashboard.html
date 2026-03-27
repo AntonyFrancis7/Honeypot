@@ -194,12 +194,12 @@
 
         for (const ip of ipsToFetch) {
           try {
-            const ipRes = await fetch(`https://ipwho.is/${ip}`);
-            const ipData = await ipRes.json();
-            if (ipData.success) {
-              ipLocationCache[ip] = { country: ipData.country, lat: ipData.latitude, lon: ipData.longitude };
+            const ipRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
+            if (ipRes.ok) {
+              const ipData = await ipRes.json();
+              ipLocationCache[ip] = { country: ipData.country || "Unknown", lat: parseFloat(ipData.latitude) || null, lon: parseFloat(ipData.longitude) || null };
             } else {
-              ipLocationCache[ip] = { country: ipData.message || "Unknown API err", lat: null, lon: null };
+              ipLocationCache[ip] = { country: "Unknown API err", lat: null, lon: null };
             }
           } catch (e) {
             ipLocationCache[ip] = { country: "Unknown (CORS/Err)", lat: null, lon: null };
