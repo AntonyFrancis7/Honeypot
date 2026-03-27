@@ -165,6 +165,17 @@
   <script>
     const ipLocationCache = {};
     
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>'"]/g, tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+      }[tag] || tag));
+    }
+    
     async function fetchRecentLogs() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || '';
@@ -210,8 +221,8 @@
         data.forEach(log => {
           const timestamp = log.timestamp ? log.timestamp.substring(0, 19).replace('T', ' ') : '';
           const ip = log.ip || '';
-          const path = log.path || '';
-          const payload = log.payload || '';
+          const path = escapeHTML(log.path || '');
+          const payload = escapeHTML(log.payload || '');
           const attack_types = log.attack_types || '';
           
           let flagHtml = '';
