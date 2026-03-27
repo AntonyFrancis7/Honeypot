@@ -194,12 +194,12 @@
 
         for (const ip of ipsToFetch) {
           try {
-            const ipRes = await fetch(`http://ip-api.com/json/${ip}`);
+            const ipRes = await fetch(`https://ipwho.is/${ip}`);
             const ipData = await ipRes.json();
-            if (ipData.status === "success") {
-              ipLocationCache[ip] = { country: ipData.country, lat: ipData.lat, lon: ipData.lon };
+            if (ipData.success) {
+              ipLocationCache[ip] = { country: ipData.country, lat: ipData.latitude, lon: ipData.longitude };
             } else {
-              ipLocationCache[ip] = { country: "Unknown API err", lat: null, lon: null };
+              ipLocationCache[ip] = { country: ipData.message || "Unknown API err", lat: null, lon: null };
             }
           } catch (e) {
             ipLocationCache[ip] = { country: "Unknown (CORS/Err)", lat: null, lon: null };
